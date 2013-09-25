@@ -32,6 +32,7 @@ import java.security.Provider;
 import java.security.Security;
 import java.security.spec.DSAParameterSpec;
 import java.security.spec.PSSParameterSpec;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import javax.crypto.Mac;
@@ -95,20 +96,19 @@ public class MacTest extends TestCase {
         }
     }
 
-    private Mac [] createMacs() {
+    private Mac[] createMacs() throws Exception {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
             return null;
         }
-        try {
-            Mac m [] = new Mac[3];
-            m[0] = Mac.getInstance(defaultAlgorithm);
-            m[1] = Mac.getInstance(defaultAlgorithm, defaultProvider);
-            m[2] = Mac.getInstance(defaultAlgorithm, defaultProviderName);
-            return m;
-        } catch (Exception e) {
-            return null;
+        ArrayList<Mac> macList = new ArrayList<Mac>();
+        macList.add(Mac.getInstance(defaultAlgorithm));
+        macList.add(Mac.getInstance(defaultAlgorithm, defaultProvider));
+        macList.add(Mac.getInstance(defaultAlgorithm, defaultProviderName));
+        for (Provider p : Security.getProviders("Mac." + defaultAlgorithm)) {
+            macList.add(Mac.getInstance(defaultAlgorithm, p));
         }
+        return macList.toArray(new Mac[macList.size()]);
     }
 
     /**
@@ -552,7 +552,7 @@ public class MacTest extends TestCase {
      * Test for <code>clone()</code> method
      * Assertion: returns Mac object or throws CloneNotSupportedException
      */
-    public void testMacClone() throws NoSuchAlgorithmException, CloneNotSupportedException {
+    public void testMacClone() throws Exception {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
             return;
@@ -593,6 +593,7 @@ public class MacTest extends TestCase {
         SecretKeySpec sks1 = new SecretKeySpec(b, "RSA");
 
         for (int i = 0; i < macs.length; i++) {
+            macs[i].reset();
             macs[i].init(sks);
             try {
                 macs[i].init(sks1, algPSS);
@@ -704,7 +705,7 @@ public class MacTest extends TestCase {
      * Test for <code>clone()</code> method
      * Assertion: clone if provider is clo
      */
-    public void testClone()  {
+    public void testClone() throws Exception {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
             return;
@@ -725,7 +726,7 @@ public class MacTest extends TestCase {
      * Test for <code>getMacLength()</code> method
      * Assertion: return Mac length
      */
-    public void testGetMacLength() {
+    public void testGetMacLength() throws Exception {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
             return;
@@ -741,7 +742,7 @@ public class MacTest extends TestCase {
      * Test for <code>reset()</code> method
      * Assertion: return Mac length
      */
-    public void testReset() throws InvalidKeyException {
+    public void testReset() throws Exception {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
             return;
